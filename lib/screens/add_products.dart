@@ -4,32 +4,44 @@ import 'package:flutter/material.dart';
 import 'dart:developer';
 
 class AddProducts extends StatefulWidget {
+  String _email;
+
+  AddProducts(this._email);
   @override
   _AddContactsState createState() => _AddContactsState();
 }
 
 class _AddContactsState extends State<AddProducts> {
+  bool _isloading = false;
   late TextEditingController _nameController,
       _numberController,
       _spController,
       _mrpController,
       _quantityController;
+
   //late String _typeSelected = '';
 
   late DatabaseReference _ref;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    String result = (widget._email).replaceAll(".", "");
+    //print(result);
     _nameController = TextEditingController();
     _numberController = TextEditingController();
     _spController = TextEditingController();
     _mrpController = TextEditingController();
     _quantityController = TextEditingController();
-    _ref = FirebaseDatabase.instance.reference().child('Products');
+    _ref = FirebaseDatabase.instance
+        .reference()
+        .child('${result}')
+        .child('Products');
 
     //_ref = FirebaseDatabase.instance.reference().child('Products');
   }
+
   //
   // Widget _buildContactType(String title) {
   //   return InkWell(
@@ -86,7 +98,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _mrpController,
               decoration: InputDecoration(
-                hintText: 'Enter M.R.P',
+                hintText: 'M.R.P.',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -100,7 +112,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _numberController,
               decoration: InputDecoration(
-                hintText: 'Enter C.P.',
+                hintText: 'Purchase Rate',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -116,7 +128,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _spController,
               decoration: InputDecoration(
-                hintText: 'Enter S.P.',
+                hintText: 'Sell Rate',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -135,7 +147,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _quantityController,
               decoration: InputDecoration(
-                hintText: 'Enter Quantity ',
+                hintText: 'Scheme ',
                 prefixIcon: Icon(
                   Icons.production_quantity_limits,
                   size: 30,
@@ -151,20 +163,22 @@ class _AddContactsState extends State<AddProducts> {
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 10),
-              child: RaisedButton(
-                child: Text(
-                  'Save Contact',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onPressed: () {
-                  saveContact();
-                },
-                color: Theme.of(context).primaryColor,
-              ),
+              child: _isloading
+                  ? CircularProgressIndicator()
+                  : RaisedButton(
+                      child: Text(
+                        'Save Product',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () {
+                        saveContact();
+                      },
+                      color: Theme.of(context).primaryColor,
+                    ),
             )
           ],
         ),
@@ -172,22 +186,85 @@ class _AddContactsState extends State<AddProducts> {
     );
   }
 
-  void saveContact() {
+  _showDeleteDialog(String alertText) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('AlertDialog'),
+        content: Text('$alertText'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'Cancel'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'OK'),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> printFirebase(String name) async {
+    int check = 0;
+    await _ref.once().then((DataSnapshot snapshot) {
+      if (snapshot.value == null) {
+        return false;
+      }
+      Map<dynamic, dynamic> values = snapshot.value;
+
+      // print(values.toString());
+      //print(name);
+
+      values.forEach((k, v) {
+        //print(v['name']);
+        if (v["name"].toString() == name) {
+          //print("exist");
+          check = 1;
+        }
+      });
+    });
+    if (check == 1) {
+      return true;
+    }
+    return false;
+  }
+
+  void saveContact() async {
+    setState(() {
+      _isloading = true;
+    });
     String name = _nameController.text;
-    String number = _numberController.text;
-    String sp = _spController.text;
+    name = name.toLowerCase();
+    String number = _numberController.text == '' ? '0' : _numberController.text;
+    String sp = _spController.text == '' ? '0' : _spController.text;
     String mrp = _mrpController.text;
     String quantity = _quantityController.text;
-    Map<String, String> contact = {
-      'name': name,
-      'cp': 'C.P. = ₹' + number,
-      'sp': 'S.P. = ₹' + sp,
-      'mrp': mrp,
-      'type': quantity,
-    };
-
-    _ref.push().set(contact).then((value) {
-      Navigator.pop(context);
+    bool nameExist = await printFirebase(name);
+    // print(nameExist);
+    //nameExist = true;
+    // bool nameExist = false;
+    setState(() {
+      _isloading = false;
     });
+
+    if (nameExist) {
+      _showDeleteDialog("Product is already in the list!! ");
+    } else if (int.parse(number) > int.parse(sp)) {
+      _showDeleteDialog("Purchase rate is greater than sell rate");
+    } else {
+      Map<String, String> contact = {
+        'name': name,
+        'cp': 'Purchase = ₹' + number,
+        'sp': 'Sell = ₹' + sp,
+        'mrp': mrp,
+        'type': 'Scheme = ₹' + quantity,
+      };
+
+      _ref.push().set(contact).then((value) {
+        Navigator.pop(context);
+      });
+    }
   }
 }

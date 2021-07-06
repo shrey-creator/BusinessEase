@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'dart:developer';
 
 class EditProduct extends StatefulWidget {
-  String contactKey;
+  String contactKey, email;
 
-  EditProduct(this.contactKey);
+  EditProduct(this.contactKey, this.email);
   @override
   _EditProductState createState() => _EditProductState();
 }
@@ -29,7 +29,12 @@ class _EditProductState extends State<EditProduct> {
     _spController = TextEditingController();
     _mrpController = TextEditingController();
     _quantityController = TextEditingController();
-    _ref = FirebaseDatabase.instance.reference().child('Products');
+    String result = (widget.email).replaceAll(".", "");
+    print(result);
+    _ref = FirebaseDatabase.instance
+        .reference()
+        .child('$result')
+        .child('Products');
     getContactDetail();
     //_ref = FirebaseDatabase.instance.reference().child('Products');
   }
@@ -63,7 +68,7 @@ class _EditProductState extends State<EditProduct> {
             TextFormField(
               controller: _mrpController,
               decoration: InputDecoration(
-                hintText: 'Enter M.R.P',
+                hintText: 'M.R.P.',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -79,7 +84,7 @@ class _EditProductState extends State<EditProduct> {
             TextFormField(
               controller: _numberController,
               decoration: InputDecoration(
-                hintText: 'Enter C.P',
+                hintText: 'Purchase Rate',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -95,7 +100,7 @@ class _EditProductState extends State<EditProduct> {
             TextFormField(
               controller: _spController,
               decoration: InputDecoration(
-                hintText: 'Enter S.P.',
+                hintText: 'Sell Rate',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -109,7 +114,7 @@ class _EditProductState extends State<EditProduct> {
             TextFormField(
               controller: _quantityController,
               decoration: InputDecoration(
-                hintText: 'Enter quantity',
+                hintText: 'Scheme',
                 prefixIcon: Icon(
                   Icons.production_quantity_limits,
                   size: 30,
@@ -127,7 +132,7 @@ class _EditProductState extends State<EditProduct> {
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: RaisedButton(
                 child: Text(
-                  'Save Contact',
+                  'Save Changes',
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white,

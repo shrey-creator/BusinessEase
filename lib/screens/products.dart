@@ -3,9 +3,16 @@ import 'dart:developer';
 import 'package:business/main.dart';
 import 'package:business/screens/add_products.dart';
 import 'package:business/screens/edit_product.dart';
+import 'package:business/screens/login_registration.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+final _auth = FirebaseAuth.instance;
+dynamic loggedInUser;
 
 class Products extends StatefulWidget {
   @override
@@ -13,21 +20,53 @@ class Products extends StatefulWidget {
 }
 
 class _ContactsState extends State<Products> {
+  final FirebaseAuth auth = FirebaseAuth.instance;
+
   late TextEditingController _nameController;
   late Map contact;
   late Query _ref;
-  DatabaseReference reference =
-      FirebaseDatabase.instance.reference().child('Products');
+  late DatabaseReference reference;
+  late String _useremail = "";
+
+  void getCurrentUser() async {
+    try {
+      final user = await _auth.currentUser;
+      loggedInUser = user;
+      if (user != null) {
+        setState(() {
+          _useremail = loggedInUser.email.replaceAll(".", "");
+        });
+
+        print(_useremail);
+        getdata(_useremail);
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void getdata(String mail) {
+    reference = FirebaseDatabase.instance
+        .reference()
+        .child('${mail}')
+        .child('Products');
+    _ref = FirebaseDatabase.instance
+        .reference()
+        .child('${mail}')
+        .child('Products')
+        .orderByChild('name');
+    //print("get data");
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _nameController = TextEditingController();
-    _ref = FirebaseDatabase.instance
-        .reference()
-        .child('Products')
-        .orderByChild('name');
+    //  print("hello");
+    getCurrentUser();
+
+    // print("end init");
   }
 
   Widget _buildContactItem(Map contact) {
@@ -83,25 +122,22 @@ class _ContactsState extends State<Products> {
                     fontWeight: FontWeight.w600),
               ),
               SizedBox(width: 15),
-              Icon(
-                Icons.production_quantity_limits,
-                color: Theme.of(context).accentColor,
-                size: 20,
-              ),
-              SizedBox(
-                width: 6,
-              ),
-              Text(
-                contact['type'],
-                style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).accentColor,
-                    fontWeight: FontWeight.w600),
-              ),
+              // Icon(
+              //   Icons.production_quantity_limits,
+              //   color: Theme.of(context).accentColor,
+              //   size: 20,
+              // ),
             ],
           ),
           SizedBox(
             height: 15,
+          ),
+          Text(
+            contact['type'],
+            style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).accentColor,
+                fontWeight: FontWeight.w600),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -111,9 +147,8 @@ class _ContactsState extends State<Products> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => EditProduct(
-                                contact['key'],
-                              )));
+                          builder: (_) =>
+                              EditProduct(contact['key'], _useremail)));
                 },
                 child: Row(
                   children: [
@@ -178,6 +213,7 @@ class _ContactsState extends State<Products> {
                   child: Text('Cancel')),
               FlatButton(
                   onPressed: () {
+                    print(contact['key']);
                     reference
                         .child(contact['key'])
                         .remove()
@@ -190,7 +226,8 @@ class _ContactsState extends State<Products> {
   }
 
   _searchBar() {
-    return Padding(
+    return Expanded(
+        child: Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
         controller: _nameController,
@@ -201,7 +238,7 @@ class _ContactsState extends State<Products> {
           });
         },
       ),
-    );
+    ));
   }
 
   @override
@@ -210,12 +247,52 @@ class _ContactsState extends State<Products> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text('My Products'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.logout,
+              color: Colors.white,
+            ),
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.remove('email');
+              await FirebaseAuth.instance.signOut();
+              // SystemNavigator.pop();
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => RegistrationScreen())
+                  // Navigator.popUntil(
+                  //   context,
+                  //   ModalRoute.withName('/'),
+                  );
+              // do something
+            },
+          )
+        ],
       ),
       body: Container(
           height: double.infinity,
           child: Column(
             children: [
-              _searchBar(),
+              Row(
+                children: [
+                  _searchBar(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) {
+                          return AddProducts(_useremail);
+                        }),
+                      );
+                    },
+                    child: Icon(
+                      Icons.add_box,
+                      color: Theme.of(context).primaryColor,
+                      size: 30,
+                    ),
+                  ),
+                ],
+              ),
               Expanded(
                 child: FirebaseAnimatedList(
                   query: _ref,
@@ -238,17 +315,17 @@ class _ContactsState extends State<Products> {
               ),
             ],
           )),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) {
-              return AddProducts();
-            }),
-          );
-        },
-        child: Icon(Icons.add, color: Colors.white),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(builder: (_) {
+      //         return AddProducts(_useremail);
+      //       }),
+      //     );
+      //   },
+      //   child: Icon(Icons.add, color: Colors.white),
+      // ),
     );
   }
 
