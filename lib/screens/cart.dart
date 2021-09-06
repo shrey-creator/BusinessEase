@@ -93,7 +93,7 @@ class _CartState extends State<Cart> {
               ),
               Expanded(
                 child: Container(
-                  padding: EdgeInsets.only(right: 50.0),
+                  padding: EdgeInsets.only(right: 30.0),
                   child: TextFormField(
                     initialValue: contacts['qty_pur'],
                     onChanged: (e) {
@@ -118,7 +118,7 @@ class _CartState extends State<Cart> {
                       labelText: 'QTY',
                       isDense: true, // Added this
                     ),
-                    style: TextStyle(height: 0.5, color: Colors.black),
+                    style: TextStyle(height: 1, color: Colors.black),
                   ),
                 ),
               ),
