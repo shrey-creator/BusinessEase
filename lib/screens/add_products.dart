@@ -17,7 +17,8 @@ class _AddContactsState extends State<AddProducts> {
       _numberController,
       _spController,
       _mrpController,
-      _quantityController;
+      _quantityController,
+      _qtyController;
 
   //late String _typeSelected = '';
 
@@ -34,6 +35,7 @@ class _AddContactsState extends State<AddProducts> {
     _spController = TextEditingController();
     _mrpController = TextEditingController();
     _quantityController = TextEditingController();
+    _qtyController = TextEditingController();
     _ref = FirebaseDatabase.instance
         .reference()
         .child('${result}')
@@ -84,7 +86,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                hintText: 'Enter Medicine Name',
+                hintText: 'Enter Product Name',
                 prefixIcon: Icon(
                   Icons.medication,
                   size: 30,
@@ -112,7 +114,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _numberController,
               decoration: InputDecoration(
-                hintText: 'Purchase Rate',
+                hintText: 'Cost Rate',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -128,7 +130,7 @@ class _AddContactsState extends State<AddProducts> {
             TextFormField(
               controller: _spController,
               decoration: InputDecoration(
-                hintText: 'Sell Rate',
+                hintText: 'Purchase Rate',
                 prefixIcon: Icon(
                   Icons.money,
                   size: 30,
@@ -148,6 +150,19 @@ class _AddContactsState extends State<AddProducts> {
               controller: _quantityController,
               decoration: InputDecoration(
                 hintText: 'Scheme ',
+                prefixIcon: Icon(
+                  Icons.confirmation_number,
+                  size: 30,
+                ),
+                fillColor: Colors.white,
+                filled: true,
+                contentPadding: EdgeInsets.all(15),
+              ),
+            ),
+            TextFormField(
+              controller: _qtyController,
+              decoration: InputDecoration(
+                hintText: 'Enter stock ',
                 prefixIcon: Icon(
                   Icons.production_quantity_limits,
                   size: 30,
@@ -241,6 +256,7 @@ class _AddContactsState extends State<AddProducts> {
     String sp = _spController.text == '' ? '0' : _spController.text;
     String mrp = _mrpController.text;
     String quantity = _quantityController.text;
+    int qty = int.parse(_qtyController.text);
     bool nameExist = await printFirebase(name);
     // print(nameExist);
     //nameExist = true;
@@ -251,15 +267,15 @@ class _AddContactsState extends State<AddProducts> {
 
     if (nameExist) {
       _showDeleteDialog("Product is already in the list!! ");
-    } else if (int.parse(number) > int.parse(sp)) {
-      _showDeleteDialog("Purchase rate is greater than sell rate");
     } else {
-      Map<String, String> contact = {
+      Map<String, dynamic> contact = {
         'name': name,
-        'cp': 'Purchase = ₹' + number,
-        'sp': 'Sell = ₹' + sp,
+        'cp': number,
+        'sp': sp,
         'mrp': mrp,
-        'type': 'Scheme = ₹' + quantity,
+        'type': quantity,
+        'qty': qty,
+        'rate': 0.0
       };
 
       _ref.push().set(contact).then((value) {

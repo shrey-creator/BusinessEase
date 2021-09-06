@@ -1,20 +1,24 @@
+import 'package:business/screens/loading_screen.dart';
 import 'package:business/screens/login_registration.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:splashscreen/splashscreen.dart';
 import 'screens/products.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 final _auth = FirebaseAuth.instance;
 dynamic loggedInUser;
-
+var email;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  var email = prefs.getString('email');
+  email = prefs.getString('email');
   //print(email);
-  runApp(MaterialApp(home: email == null ? MyApp() : Home()));
+  runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: email == null ? MyApp() : Home()));
 }
 
 class MyApp extends StatelessWidget {
@@ -44,7 +48,7 @@ class Home extends StatelessWidget {
         primaryColor: Colors.deepPurple,
         accentColor: Colors.redAccent,
       ),
-      home: Products(),
+      home: LoadingScreen(),
     );
   }
 }

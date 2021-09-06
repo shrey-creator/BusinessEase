@@ -1,3 +1,4 @@
+import 'package:business/screens/loading_screen.dart';
 import 'package:business/screens/products.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,7 +58,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) {
-          return Products();
+          return LoadingScreen();
         }),
       );
     } on FirebaseAuthException catch (e) {
@@ -92,7 +93,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) {
-          return Products();
+          return LoadingScreen();
         }),
       );
     } on FirebaseAuthException catch (e) {
@@ -131,6 +132,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              Flexible(
+                child: Image(
+                  image: AssetImage('images/bag.jfif'),
+                  height: 100.0,
+                ),
+              ),
               SizedBox(
                 height: 48.0,
               ),

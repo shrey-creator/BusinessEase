@@ -16,7 +16,8 @@ class _EditProductState extends State<EditProduct> {
       _numberController,
       _spController,
       _mrpController,
-      _quantityController;
+      _quantityController,
+      _qtyController;
   //late String _typeSelected = '';
 
   late DatabaseReference _ref;
@@ -29,6 +30,7 @@ class _EditProductState extends State<EditProduct> {
     _spController = TextEditingController();
     _mrpController = TextEditingController();
     _quantityController = TextEditingController();
+    _qtyController = TextEditingController();
     String result = (widget.email).replaceAll(".", "");
     print(result);
     _ref = FirebaseDatabase.instance
@@ -116,7 +118,7 @@ class _EditProductState extends State<EditProduct> {
               decoration: InputDecoration(
                 hintText: 'Scheme',
                 prefixIcon: Icon(
-                  Icons.production_quantity_limits,
+                  Icons.confirmation_number,
                   size: 30,
                 ),
                 fillColor: Colors.white,
@@ -126,6 +128,19 @@ class _EditProductState extends State<EditProduct> {
             ),
             SizedBox(
               height: 25,
+            ),
+            TextFormField(
+              controller: _qtyController,
+              decoration: InputDecoration(
+                hintText: 'Enter stock ',
+                prefixIcon: Icon(
+                  Icons.production_quantity_limits,
+                  size: 30,
+                ),
+                fillColor: Colors.white,
+                filled: true,
+                contentPadding: EdgeInsets.all(15),
+              ),
             ),
             Container(
               width: double.infinity,
@@ -161,6 +176,7 @@ class _EditProductState extends State<EditProduct> {
     _spController.text = contact['sp'];
     _mrpController.text = contact['mrp'];
     _quantityController.text = contact['type'];
+    _qtyController.text = contact['qty'].toString();
   }
 
   void saveContact() {
@@ -169,13 +185,16 @@ class _EditProductState extends State<EditProduct> {
     String sp = _spController.text;
     String mrp = _mrpController.text;
     String quantity = _quantityController.text;
+    int qty = int.parse(_qtyController.text);
 
-    Map<String, String> contact = {
+    Map<String, dynamic> contact = {
       'name': name,
       'cp': number,
       'sp': sp,
       'mrp': mrp,
       'type': quantity,
+      'qty': qty,
+      'rate': 0.0
     };
 
     _ref.child(widget.contactKey).update(contact).then((value) {
